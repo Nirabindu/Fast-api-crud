@@ -1,0 +1,44 @@
+About LifeSpan Events
+
+Startup Events:
+    - Tiggered when Application starts
+    - Used for initializing resources like database connections, background tasks, or configurations.
+    - use full for loading ml models extera
+
+Shutdown Event:
+
+    - Triggered when the application shuts down.
+    - Used for cleaning up resources like closing database connections, stopping background tasks, etc.
+
+Dependency Injection allows to share all logics across different routs / function 
+** some code that are dependent upon other code
+
+
+
+
+
+Alembic:
+ alembic --help  :: all arguments that we can use
+
+Initialize Alembic For AsyncDB:
+ alembic init -t async migrations
+version-folder track that changes each changes in database
+env.py is the Entry Point to Alembic main working file 
+
+creating migrations:
+alembic revision --autogenerate -m "init"
+migrate:
+
+to apply new changes to databases schema 
+alembic upgrade head
+
+to downgread to previous version , Use Case: When you need to revert schema changes (e.g., you applied a migration by mistake or need to test a rollback).
+alembic downgrade <revision_id>
+alembic downgrade -1  --> Undo last Migrations
+
+
+to check current head-->
+alembic current
+
+we can change our head also:
+    
