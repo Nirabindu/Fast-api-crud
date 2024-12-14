@@ -39,9 +39,7 @@ async def create_a_book(
     return book
 
 
-@app1_router.patch(
-    "/{book_id}", response_model=Book, status_code=status.HTTP_201_CREATED
-)
+@app1_router.patch("/{book_id}", response_model=Book, status_code=status.HTTP_200_OK)
 async def update_book_(
     book_id: str,
     book_update_data: BookUpdateModel,
