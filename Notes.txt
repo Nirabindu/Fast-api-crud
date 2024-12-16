@@ -40,5 +40,10 @@ alembic downgrade -1  --> Undo last Migrations
 to check current head-->
 alembic current
 
-we can change our head also:
+we can change our head also
+
+need to see oncces:-->
+>>> import secrets
+>>> secrets.token_hex(16)
+'d2c93a6ef55573207b8e688a20e0c1b5'
     
