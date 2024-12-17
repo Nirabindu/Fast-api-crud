@@ -13,7 +13,7 @@ from src.config import Config
 # engine = create_engine(url=Config.DATABASE_URL, echo=True)
 
 # async
-engine = AsyncEngine(create_engine(url=Config.DATABASE_URL, echo=True))
+engine = AsyncEngine(create_engine(url=Config.DATABASE_URL))
 
 
 # this function used to open and hold up the connection through out the app
@@ -21,9 +21,6 @@ engine = AsyncEngine(create_engine(url=Config.DATABASE_URL, echo=True))
 async def init_db():
     try:
         async with engine.begin() as conn:
-            # creating table
-            from src.app1.models import Book
-
             await conn.run_sync(SQLModel.metadata.create_all)
     except Exception as e:
         print("Something happen with database connection")

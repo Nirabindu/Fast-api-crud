@@ -16,6 +16,7 @@ from .db.db import init_db
 # It allows you to define logic that runs before and after the yield statement.
 async def life_span(app: FastAPI):
     """Here i wants do the logic like one end will execute while server has started one will execute while server has ended"""
+    # life_span event not needed now we are gonna using alembic Instead
     print(f"Server is Starting")
     # calling init_db for connection
     await init_db()
@@ -29,7 +30,7 @@ app = FastAPI(
     title="FastApi app",
     description="Learning Fast Api",
     version=version,
-    lifespan=life_span,
+    # lifespan=life_span,
 )
 
 # registering router

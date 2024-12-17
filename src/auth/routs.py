@@ -8,8 +8,14 @@ from sqlmodel.ext.asyncio.session import (
 )
 
 from src.db.db import get_session
+from src.db.redis import add_jit_to_blacklist
 
-from .dependencies import RefreshTokenBearer
+from .dependencies import (
+    AccessTokenBearer,
+    RefreshTokenBearer,
+    RoleChecker,
+    get_current_user,
+)
 from .schemas import (
     UserCreateModel,
     UserLoginModel,
@@ -23,7 +29,9 @@ from .utils import (
 
 auth_router = APIRouter(tags=["Auth"])
 auth_service = UserauthService()
-REFRESH_TOKEN_EXPIRE = True
+role_checker = RoleChecker(["admin", "user"])
+
+REFRESH_TOKEN_EXPIRE = 2
 
 
 @auth_router.post(
@@ -80,10 +88,14 @@ async def login_users(
         password_valid = verify_password(password, user.password_hash)
         if password_valid:
             access_token = create_access_token(
-                user_data={"email": user.email, "uid": str(user.uid)}
+                user_data={"email": user.email, "uid": str(user.uid), "role": user.role}
             )
             refresh_token = create_access_token(
-                user_data={"email": user.email, "uid": str(user.uid)},
+                user_data={
+                    "email": user.email,
+                    "uid": str(user.uid),
+                    "role": user.role,
+                },
                 refresh=True,
                 expiry=timedelta(days=REFRESH_TOKEN_EXPIRE),
             )
@@ -109,9 +121,26 @@ async def login_users(
 # needs to pass access token at header
 async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
     expiry_time = token_details["exp"]
+    # fromtimestamp(exp_time) will convert timestamp to actual datetime 1638364800 ->  2021-12-04 00:00:00
     if datetime.fromtimestamp(expiry_time) > datetime.now():
         new_access_token = create_access_token(token_details["user"])
         return JSONResponse(content={"access_token": new_access_token})
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or Expire Token"
+    )
+
+
+@auth_router.get("/me")
+async def get_current_user_(
+    user=Depends(get_current_user), _: bool = Depends(role_checker)
+):
+    return user
+
+
+@auth_router.get("/logout")
+async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
+    jti = token_details["jti"]
+    await add_jit_to_blacklist(jti)
+    return JSONResponse(
+        content={"message": "Logout Successfully"}, status_code=status.HTTP_200_OK
     )
