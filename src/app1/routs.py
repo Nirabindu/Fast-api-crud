@@ -20,17 +20,26 @@ role_checker = RoleChecker(["admin", "user"])
 
 
 # all the views related app1 will be write here
-@app1_router.get("/", response_model=list[Book])
+@app1_router.get("/", response_model=list[BookDetailsModel])
 async def get_details(
     session: AsyncSession = Depends(get_session),
     user_details=Depends(access_token_bearer),
-) -> list[Book]:
-    print("getting user details", user_details)
+) -> list[BookDetailsModel]:
     book = await book_service.get_all_books(session)
     return book
 
 
-@app1_router.get("/{book_id}", response_model=Book)
+@app1_router.get("/my_books", response_model=list[BookDetailsModel])
+async def get_my_books(
+    session: AsyncSession = Depends(get_session),
+    user_details=Depends(access_token_bearer),
+) -> list[BookDetailsModel]:
+    user_id = user_details.get("user")["uid"]
+    book = await book_service.get_won_books(user_id, session)
+    return book
+
+
+@app1_router.get("/{book_id}", response_model=BookDetailsModel)
 async def get_book(
     book_id: str,
     session: AsyncSession = Depends(get_session),
@@ -56,7 +65,8 @@ async def create_a_book(
     session: AsyncSession = Depends(get_session),
     user_details=Depends(access_token_bearer),
 ) -> dict:
-    book = await book_service.create_book(book_data, session)
+    user_id = user_details.get("user")["uid"]
+    book = await book_service.create_book(book_data, user_id, session)
     return book
 
 

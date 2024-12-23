@@ -9,11 +9,12 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlmodel import SQLModel
 
-from src.app1.models import Book
-from src.auth.models import User
-
 # import
 from src.config import Config
+
+# from src.app1.models import Book
+# from src.auth.models import User
+from src.db import models
 
 # importing database url
 database_url = Config.DATABASE_URL

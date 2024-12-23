@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 
 import jwt
+from itsdangerous import URLSafeTimedSerializer
 from passlib.context import CryptContext
 
 from src.config import Config
@@ -10,7 +11,7 @@ from src.config import Config
 password_context = CryptContext(schemes=["bcrypt"])
 
 # In Second
-ACCESS_TOKEN_EXPIRY = 3600
+ACCESS_TOKEN_EXPIRY = 5
 
 
 def generate_password_hash(password: str) -> str:
@@ -77,3 +78,23 @@ def decode_token(token: str) -> dict:
 
         logging.exception(e)
         return None
+
+
+# creating safe url Serializer
+serializer = URLSafeTimedSerializer(
+    secret_key=Config.JWT_SECRET, salt="email-configuration"
+)
+
+
+def create_url_safe_token(data: dict):
+
+    token = serializer.dumps(data, salt="email-configuration")
+    return token
+
+
+def decode_url_safe_token(token: str):
+    try:
+        token_data = serializer.loads(token)
+        return token_data
+    except Exception as e:
+        logging.error(str(e))

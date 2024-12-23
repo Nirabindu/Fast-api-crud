@@ -3,17 +3,21 @@ from typing import Any
 from fastapi import Depends, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.security import HTTPBearer
-from fastapi.security.http import (
-    HTTPAuthorizationCredentials,
-)
-from sqlmodel.ext.asyncio.session import (
-    AsyncSession,
-)
+from fastapi.security.http import HTTPAuthorizationCredentials
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.db.db import get_session
+from src.db.models import User
 from src.db.redis import token_in_blacklist
+from src.errors import (
+    AccessTokenRequireException,
+    InsufficientPermissionException,
+    InvalidTokenException,
+    RefreshTokenRequireException,
+    RevokedTokenException,
+    UserExistException,
+)
 
-from .models import User
 from .service import UserauthService
 from .utils import decode_token
 
@@ -34,22 +38,27 @@ class TokenBearer(HTTPBearer):
         token_data = decode_token(token)
         # so token valid return True(if) and not convert it to False and if will not execute
         if not self.token_valid(token):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "error": "This Token is Invalid or Expire",
-                    "resolution": "Please Login Again",
-                },
-            )
+
+            raise InvalidTokenException()
+
+            # raise HTTPException(
+            #     status_code=status.HTTP_403_FORBIDDEN,
+            #     detail={
+            #         "error": "This Token is Invalid or Expire",
+            #         "resolution": "Please Login Again",
+            #     },
+            # )
 
         if await token_in_blacklist(token_data["jti"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "error": "This Token is Invalid or revoked",
-                    "resolution": "Please Login Again",
-                },
-            )
+
+            raise RevokedTokenException()
+            # raise HTTPException(
+            #     status_code=status.HTTP_403_FORBIDDEN,
+            #     detail={
+            #         "error": "This Token is Invalid or revoked",
+            #         "resolution": "Please Login Again",
+            #     },
+            # )
 
         self.verify_token_data(token_data)
         return token_data
@@ -74,19 +83,21 @@ class AccessTokenBearer(TokenBearer):
 
         """
         if token_data and token_data["refresh"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Please Provide valid access Token",
-            )
+            raise AccessTokenRequireException()
+            # raise HTTPException(
+            #     status_code=status.HTTP_403_FORBIDDEN,
+            #     detail="Please Provide valid access Token",
+            # )
 
 
 class RefreshTokenBearer(TokenBearer):
     def verify_token_data(self, token_data: dict) -> None:
         if token_data and not token_data["refresh"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Please Provide valid refresh Token",
-            )
+            # raise HTTPException(
+            #     status_code=status.HTTP_403_FORBIDDEN,
+            #     detail="Please Provide valid refresh Token",
+            # )
+            raise RefreshTokenRequireException()
 
 
 # current logged in user
@@ -107,9 +118,14 @@ class RoleChecker:
 
     # used class as function invoke class() instead objects
     def __call__(self, current_user: User = Depends(get_current_user)) -> Any:
+
+        if not current_user.is_verified:
+            # raise an Exception
+            pass
         if current_user.role in self.roles:
             return True
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={"error": "Operation Not Permitted"},
-        )
+        # raise HTTPException(
+        #     status_code=status.HTTP_403_FORBIDDEN,
+        #     detail={"error": "Operation Not Permitted"},
+        # )
+        raise InsufficientPermissionException()

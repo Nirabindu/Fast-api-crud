@@ -1,10 +1,9 @@
 from pydantic import EmailStr
 from sqlmodel import desc, select
-from sqlmodel.ext.asyncio.session import (
-    AsyncSession,
-)
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from .models import User
+from src.db.models import User
+
 from .schemas import UserCreateModel
 from .utils import generate_password_hash
 
@@ -60,3 +59,9 @@ class UserauthService:
         session.add(new_user)
         await session.commit()
         return new_user
+
+    async def update_user(self, user: User, user_data: dict, session: AsyncSession):
+        for k, v in user_data.items():
+            setattr(user, k, v)
+        await session.commit()
+        return user

@@ -4,9 +4,10 @@ from src.config import Config
 
 JTI_EXPIRY = 3600
 
-token_blacklist = aioredis.StrictRedis(
-    host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0
-)
+# token_blacklist = aioredis.StrictRedis(
+#     host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0
+# )
+token_blacklist = aioredis.from_url(Config.REDIS_URL)
 
 
 async def add_jit_to_blacklist(jti: str) -> None:

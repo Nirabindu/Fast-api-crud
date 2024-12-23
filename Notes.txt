@@ -47,3 +47,9 @@ need to see oncces:-->
 >>> secrets.token_hex(16)
 'd2c93a6ef55573207b8e688a20e0c1b5'
     
+
+run the worker
+celery -A src.celery_tasks.c_app
+
+seeing details of worker with flower
+celery -A src.celery_tasks.c_app flower

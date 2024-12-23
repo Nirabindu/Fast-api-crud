@@ -3,6 +3,10 @@ from datetime import date, datetime
 
 from pydantic import BaseModel
 
+from src.reviews.schemas import ReviewModel
+
+# from src.auth.schemas import UserResponseModel
+
 
 class Book(BaseModel):
     """This class is example of Model Schema."""
@@ -36,3 +40,12 @@ class BookUpdateModel(BaseModel):
     publisher: str
     page_count: int
     language: str
+
+
+# to avoid circular Import needs to use inside ""
+# class BookResponseModel(Book):
+#     user: "UserResponseModel"
+
+
+class BookDetailsModel(Book):
+    reviews: list[ReviewModel] = []
